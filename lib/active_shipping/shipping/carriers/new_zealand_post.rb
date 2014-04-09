@@ -3,12 +3,12 @@ module ActiveMerchant
     class NewZealandPost < Carrier
 
       cattr_reader :name
-      @@name = "New Zealand Post"
+      @@name = 'New Zealand Post'
 
-      URL = "http://api.nzpost.co.nz/ratefinder"
+      URL = 'http://shippingoptions-nzpg.au.cloudhub.io/v1'
 
       def requirements
-        [:key]
+        [:account_number, :license_key]
       end
 
       def find_rates(origin, destination, packages, options = {})
@@ -18,19 +18,27 @@ module ActiveMerchant
         request.rate_response
       end
 
-      protected
+    protected
 
       def commit(urls)
-        save_request(urls).map { |url| ssl_get(url) }
+        save_request(urls).map do |url|
+          ssl_get(url, headers)
+        end
+      end
+
+      def headers
+        {
+          "license-key" => @options[:license_key],
+        }
       end
 
       def self.default_location
         Location.new({
-          :country => "NZ",
-          :city => "Wellington",
-          :address1 => "22 Waterloo Quay",
-          :address2 => "Pipitea",
-          :postal_code => "6011"
+          :country => 'NZ',
+          :city => 'Wellington',
+          :address1 => '22 Waterloo Quay',
+          :address2 => 'Pipitea',
+          :postal_code => '6011'
         })
       end
 
@@ -58,7 +66,7 @@ module ActiveMerchant
           @origin = Location.from(origin)
           @destination = Location.from(destination)
           @packages = Array(packages).map { |package| NewZealandPostPackage.new(package, api) }
-          @params = { :format => "json", :api_key => options[:key] }
+          @params = { "account_number" => options[:account_number] }
           @test = options[:test]
           @rates = @responses = @raw_responses = []
           @urls = @packages.map { |package| url(package) }
@@ -66,7 +74,7 @@ module ActiveMerchant
 
         def rate_response
           @rates = rates
-          NewZealandPostRateResponse.new(true, "success", response_params, response_options)
+          NewZealandPostRateResponse.new(true, 'success', response_params, response_options)
         rescue => error
           NewZealandPostRateResponse.new(false, error.message, response_params, response_options)
         end
@@ -75,7 +83,15 @@ module ActiveMerchant
           self.class.new_zealand?(@origin)
         end
 
-        protected
+        def service_name(product)
+          product['name']
+        end
+
+        def price(product)
+          product['price_inc_gst'].to_f
+        end
+
+      protected
 
         def self.new_zealand?(location)
           [ 'NZ', nil ].include?(Location.from(location).country_code)
@@ -98,18 +114,18 @@ module ActiveMerchant
           { :responses => @responses }
         end
 
-        def rate_options(products)
-          {
-            :total_price => products.sum { |product| price(product) },
-            :currency => "NZD",
-            :service_code => products.first["code"]
-          }
-        end
-
         def rates
           rates_hash.map do |service, products|
             RateEstimate.new(@origin, @destination, NewZealandPost.name, service, rate_options(products))
           end
+        end
+
+        def rate_options(products)
+          {
+            :total_price => products.sum { |product| price(product) },
+            :currency => 'NZD',
+            :service_code => products.first['code']
+          }
         end
 
         def rates_hash
@@ -122,8 +138,8 @@ module ActiveMerchant
 
         def product_arrays
           responses.map do |response|
-            raise(response["message"]) unless response["status"] == "success"
-            response["products"]
+            raise response['message'].to_s unless response['success']
+            response['services']
           end
         end
 
@@ -146,48 +162,33 @@ module ActiveMerchant
       end
 
       class Domestic < RateRequest
-        def service_name(product)
-          [ product["service_group_description"], product["description"] ].join(" ")
-        end
-        
         def api
           :domestic
         end
 
         def api_params
           {
-            :postcode_src => @origin.postal_code,
-            :postcode_dest => @destination.postal_code,
-            :carrier => "all"
+            "pickup_address_post_code" => @origin.postal_code,
+            "pickup_address_suburb" => @origin.address2,
+            "delivery_address_post_code" => @destination.postal_code,
+            "delivery_address_suburb" => @destination.address2,
           }
-        end
-
-        def price(product)
-          product["cost"].to_f
         end
       end
 
       class International < RateRequest
 
         def rates
-          raise "New Zealand Post packages must originate in New Zealand" unless new_zealand_origin?
+          raise 'New Zealand Post packages must originate in New Zealand' unless new_zealand_origin?
           super
         end
 
-        def service_name(product)
-          [ product["group"], product["name"] ].join(" ")
-        end
-        
         def api
           :international
         end
 
         def api_params
-          { :country_code => @destination.country_code }
-        end
-        
-        def price(product)
-          product["price"].to_f
+          { "delivery_country" => @destination.country_code }
         end
       end
 
@@ -196,7 +197,7 @@ module ActiveMerchant
         def initialize(package, api)
           @package = package
           @api = api
-          @params = { :weight => weight, :length => length }
+          @params = { "weight" => weight }
         end
 
         def params
@@ -206,19 +207,24 @@ module ActiveMerchant
         protected
 
         def weight
-          @package.kg
+          # API rounds up weights to nearest kg
+          @package.kg.ceil
         end
 
         def length
-          mm(:length)
+          mm(:length).ceil
         end
 
         def height
-          mm(:height)
+          mm(:height).ceil
         end
 
         def width
-          mm(:width)
+          mm(:width).ceil
+        end
+
+        def diameter
+          mm(:diameter).ceil
         end
 
         def shape
@@ -231,7 +237,7 @@ module ActiveMerchant
         end
 
         def international_params
-          { :value => value }
+          { "value" => value }
         end
 
         def domestic_params
@@ -243,11 +249,11 @@ module ActiveMerchant
         end
 
         def cuboid_params
-          { :height => height, :thickness => width }
+          { "width" => width, "height" => height, "length" => length }
         end
 
         def cylinder_params
-          { :diameter => width }
+          { "diameter" => width, "length" => length }
         end
 
         def mm(measurement)
@@ -255,12 +261,12 @@ module ActiveMerchant
         end
 
         def value
-          return 0 unless @package.value && currency == "NZD"
+          return 0 unless @package.value && currency == 'NZD'
           @package.value / 100
         end
 
         def currency
-          @package.currency || "NZD"
+          @package.currency || 'NZD'
         end
 
       end

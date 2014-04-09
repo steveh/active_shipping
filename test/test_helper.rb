@@ -205,6 +205,7 @@ module ActiveMerchant
                                       :country => 'NZ',
                                       :city => 'Auckland',
                                       :address1 => '192 Victoria St West',
+                                      :address2 => 'Auckland',
                                       :postal_code => '1010'),
         :puerto_rico => Location.new(
                                       :country => 'PR',
