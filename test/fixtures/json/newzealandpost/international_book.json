@@ -1,1 +1,40 @@
-{"products":[{"group":"International Express Courier","price":"65.25","name":"Int Express Pcl Zone C 500gm","code":"ICPNC500","max_delivery_target":5,"signature_required":true,"min_delivery_target":1,"has_tracking":true},{"group":"International Economy Courier","price":"42.5","name":"Int Econ Cour Pcl Zn C 500gm","code":"IEZPC500","max_delivery_target":6,"signature_required":true,"min_delivery_target":2,"has_tracking":true},{"group":"International Air","price":"12.5","name":"Zone C AirPost Cust Pcl 500gm","code":"IACNC500","max_delivery_target":10,"signature_required":false,"min_delivery_target":3,"has_tracking":false},{"group":"International Economy","price":"11.25","name":"Zone C EconomyPost Pcl 500gm","code":"IECNC500","max_delivery_target":25,"signature_required":false,"min_delivery_target":10,"has_tracking":false}],"status":"success"}
+{
+  "success" : true,
+  "services" : [ {
+    "code" : "ICPNDNA1",
+    "name" : "Int Express Pcl Zone D 1.0kg",
+    "price" : 83.93,
+    "price_inc_gst" : 96.52,
+    "min_delivery" : "1.0",
+    "max_delivery" : "5.0",
+    "tracking" : true,
+    "sig_required" : true
+  }, {
+    "code" : "IEZPDNA1",
+    "name" : "Int Econ Cour Pcl Zn D 1.0kg",
+    "price" : 55.37,
+    "price_inc_gst" : 63.68,
+    "min_delivery" : "2.0",
+    "max_delivery" : "6.0",
+    "tracking" : true,
+    "sig_required" : true
+  }, {
+    "code" : "IACNDNA1",
+    "name" : "Zone D AirPost Cust Pcl 1.0kg",
+    "price" : 32.2,
+    "price_inc_gst" : 37.03,
+    "min_delivery" : "3.0",
+    "max_delivery" : "10.0",
+    "tracking" : false,
+    "sig_required" : false
+  }, {
+    "code" : "IECNDNA1",
+    "name" : "Zone D EconomyPost Pcl 1.0kg",
+    "price" : 28.99,
+    "price_inc_gst" : 33.34,
+    "min_delivery" : "10.0",
+    "max_delivery" : "25.0",
+    "tracking" : false,
+    "sig_required" : false
+  } ]
+}

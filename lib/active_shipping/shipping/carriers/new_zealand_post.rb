@@ -208,23 +208,23 @@ module ActiveMerchant
 
         def weight
           # API rounds up weights to nearest kg
-          @package.kg.ceil
+          [@package.kg.ceil, 1].max
         end
 
         def length
-          mm(:length).ceil
+          [cm(:length).ceil, 1].max
         end
 
         def height
-          mm(:height).ceil
+          [cm(:height).ceil, 1].max
         end
 
         def width
-          mm(:width).ceil
+          [cm(:width).ceil, 1].max
         end
 
         def diameter
-          mm(:diameter).ceil
+          [cm(:diameter).ceil, 1].max
         end
 
         def shape
@@ -256,8 +256,8 @@ module ActiveMerchant
           { "diameter" => width, "length" => length }
         end
 
-        def mm(measurement)
-          @package.cm(measurement) * 10
+        def cm(measurement)
+          @package.cm(measurement)
         end
 
         def value
