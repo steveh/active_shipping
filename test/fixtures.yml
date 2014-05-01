@@ -35,7 +35,7 @@ canada_post:
   login: CPC_DEMO_XML
 new_zealand_post:
   license_key: test
-  account_number: test
+  account_number: 91833337
 canada_post_pws:
   platform_id: 12345678
   api_key: 1234789
